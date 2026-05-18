@@ -38,6 +38,7 @@ public class BCPlayer {
     private LocalDateTime viewedMotd;
 
     private int currentForm = 0;
+    private String currentFormData = "";
     private LocalTime movementOpenCoolDown = LocalTime.now();
 
     private int editingServer = -1;
@@ -134,6 +135,10 @@ public class BCPlayer {
     public int getCurrentForm() {
         return currentForm;
     }
+    
+    public String getCurrentFormData() {
+        return currentFormData;
+    }
 
     public void setCurrentForm(int form) {
         currentForm = form;
@@ -198,6 +203,7 @@ public class BCPlayer {
         session.sendPacketImmediately(form);
 
         setCurrentForm(formId);
+        currentFormData = form.getFormData();
     }
 
     private ModalFormRequestPacket getForm(int formId) {
