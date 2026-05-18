@@ -6,6 +6,7 @@ import main.com.pyratron.pugmatt.bedrockconnect.*;
 import main.com.pyratron.pugmatt.bedrockconnect.config.Custom.CustomEntry;
 import main.com.pyratron.pugmatt.bedrockconnect.config.Custom.CustomServer;
 import main.com.pyratron.pugmatt.bedrockconnect.config.Custom.CustomServerGroup;
+import main.com.pyratron.pugmatt.bedrockconnect.logging.LogColors;
 
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
 import org.cloudburstmc.protocol.bedrock.packet.ModalFormRequestPacket;
@@ -13,9 +14,12 @@ import org.cloudburstmc.protocol.bedrock.packet.NetworkStackLatencyPacket;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.Arrays;
 
 public class UIForms {
-    public static final int ERROR = 2, MAIN = 0, DIRECT_CONNECT = 1, REMOVE_SERVER = 3, MANAGE_SERVER = 4, EDIT_SERVER = 5, EDIT_CHOOSE_SERVER = 6, ADD_SERVER = 7, SERVER_GROUP = 8, MOTD = 9;
+    public static final int ERROR = 2, MAIN = 0, DIRECT_CONNECT = 1, REMOVE_SERVER = 3, MANAGE_SERVER = 4, EDIT_SERVER = 5, EDIT_CHOOSE_SERVER = 6, ADD_SERVER = 7, SERVER_GROUP = 8, MOTD = 9, CREATE_WORLD = 901;
 
     public static JsonArray mainMenuButtons = new JsonArray();
     public static JsonArray manageListButtons = new JsonArray();
@@ -33,6 +37,7 @@ public class UIForms {
                 : BedrockConnect.getConfig().getLanguage().getWording("main", "removeBtn");
         manageListButtons.add(UIComponents.createButton(BedrockConnect.getConfig().getLanguage().getWording("manage", "addBtn")));
         manageListButtons.add(UIComponents.createButton(BedrockConnect.getConfig().getLanguage().getWording("manage", "editBtn")));
+        manageListButtons.add(UIComponents.createButton(BedrockConnect.getConfig().getLanguage().getWording("manage", "createBtn")));
         manageListButtons.add(UIComponents.createButton(removeBtnText));
 
         featuredServerButtons.add(UIComponents.createButton("The Hive", "https://i.imgur.com/RfxfPGz.png", "url"));
@@ -156,6 +161,8 @@ public class UIForms {
             case 1:
                 return ManageFormButton.EDIT;
             case 2:
+                return ManageFormButton.CREATE;
+            case 3:
                 return ManageFormButton.REMOVE;
         }
         return null;
@@ -191,6 +198,48 @@ public class UIForms {
 
         out.add("content", inputs);
         mf.setFormData(out.toString());
+
+        return mf;
+    }
+
+    public static ModalFormRequestPacket createCreateWorld() {
+        ModalFormRequestPacket mf = new ModalFormRequestPacket();
+        mf.setFormId(UIForms.CREATE_WORLD);
+        JsonObject out = UIComponents.createForm("custom_form", BedrockConnect.getConfig().getLanguage().getWording("createWorld", "heading"));
+
+        JsonArray inputs = new JsonArray();
+        String line;
+        List<String> worldTypes;
+        //List<String> worldVersions = new ArrayList<>();
+        
+        // TODO: Call minecraft-server-manager to get types list
+        try {
+            ProcessBuilder pb = new ProcessBuilder("sudo", "/usr/local/bin/minecraft-server-manager.sh", "listtypes");
+            pb.redirectErrorStream(true);
+            
+            Process process = pb.start();
+            
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            
+            line = reader.readLine();
+            int myExitCode = process.waitFor();
+        } catch (Exception e){
+            e.printStackTrace();
+            return mf;
+        }
+        
+        worldTypes = Arrays.asList(line.split("\\|"));
+
+        //inputs.add(UIComponents.createInput(BedrockConnect.getConfig().getLanguage().getWording("connect", "addressTitle"), BedrockConnect.getConfig().getLanguage().getWording("connect", "addressPlaceholder")));
+        //inputs.add(UIComponents.createInput(BedrockConnect.getConfig().getLanguage().getWording("connect", "portTitle"), BedrockConnect.getConfig().getLanguage().getWording("connect", "portPlaceholder"), Integer.toString(DEFAULT_PORT)));
+        inputs.add(UIComponents.createInput(BedrockConnect.getConfig().getLanguage().getWording("createWorld", "worldNameTitle"), "", ""));
+        inputs.add(UIComponents.createDropdown(worldTypes, BedrockConnect.getConfig().getLanguage().getWording("createWorld", "worldTypeTitle"), "0"));
+        //inputs.add(UIComponents.createDropdown(worldVersions, BedrockConnect.getConfig().getLanguage().getWording("createWorld", "worldVersionTitle"), "0"));
+        inputs.add(UIComponents.createInput(BedrockConnect.getConfig().getLanguage().getWording("createWorld", "seedTitle"), "", ""));
+
+        out.add("content", inputs);
+        mf.setFormData(out.toString());
+        //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] CreateWorld Form Data: " + mf.getFormData() );
 
         return mf;
     }
@@ -269,6 +318,7 @@ public class UIForms {
     }
 
     public static ModalFormRequestPacket createError(String text) {
+        //BedrockConnect.logger.info("[ " + LogColors.red("Error Packet") + " ] Create Error: " + text );
         ModalFormRequestPacket mf = new ModalFormRequestPacket();
         mf.setFormId(UIForms.ERROR);
         JsonObject form = new JsonObject();

@@ -3,6 +3,7 @@ package main.com.pyratron.pugmatt.bedrockconnect.server;
 import io.netty.buffer.Unpooled;
 import main.com.pyratron.pugmatt.bedrockconnect.BedrockConnect;
 import main.com.pyratron.pugmatt.bedrockconnect.config.Custom.CustomServerGroup;
+import main.com.pyratron.pugmatt.bedrockconnect.logging.LogColors;
 import main.com.pyratron.pugmatt.bedrockconnect.server.gui.UIComponents;
 import main.com.pyratron.pugmatt.bedrockconnect.server.gui.UIForms;
 
@@ -203,6 +204,7 @@ public class BCPlayer {
         session.sendPacketImmediately(form);
 
         setCurrentForm(formId);
+        //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Open Form Data: " + form.getFormData() );
         currentFormData = form.getFormData();
     }
 
@@ -221,6 +223,9 @@ public class BCPlayer {
                 break;
             case UIForms.ADD_SERVER:
                 form = UIForms.createAddServer();
+                break;
+            case UIForms.CREATE_WORLD:
+                form = UIForms.createCreateWorld();
                 break;
             case UIForms.EDIT_CHOOSE_SERVER:
                 form = UIForms.createEditChooseServer(getServerList());

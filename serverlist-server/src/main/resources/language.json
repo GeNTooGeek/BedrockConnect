@@ -18,7 +18,8 @@
     "heading": "Manage Server List",
     "addBtn": "Add a Server",
     "removeBtn": "Remove a Server",
-    "editBtn": "Edit a Server"
+    "editBtn": "Edit a Server",
+    "createBtn": "Create a World"
   },
   "connect": {
     "heading": "Connect to a Server",
@@ -36,6 +37,28 @@
     "heading": "Edit Server",
     "chooseHeading": "Choose a Server",
     "serverDropdown": "Servers"
+  },
+  "createWorld": {
+    "heading": "Create a World",
+    "worldNameTitle": "World Name",
+    "worldTypeTitle": "World Type",
+    "seedTitle": "World Seed"
+    "error10": "Missing player_xuid",
+    "error11": "Invalid characters in xuid ([a-f0-9]-)",
+    "error12": "player_xuid is the wrong length (36 characters)",
+    "error13": "Invalid player_xuid format (^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$)",
+    "error20": "Missing world_name",
+    "error21": "Invalid characters in world_name ([a-zA-Z0-9]- )",
+    "error22": "world_name too long (Max 30 characters)",
+    "error23": "World with world_name already exists",
+    "error30": "Missing type",
+    "error31": "Invalid type",
+    "error42": "Invalid version (default: latest).",
+    "error52": "Seed too long (Max 32 characters).",
+    "UnknownExitCode": "An unknown exit code was returned.",
+    "WorldCreationTimeout": "World creation took too long.",
+    "InvalidWorldInformation": "Invalid World Information was given."
+    "UnkownServerCreateError": "An unknown error occured while creating world."
   },
   "remove": {
     "heading": "Remove Server",
@@ -61,6 +84,9 @@
     "invalidServerConnect": "Please enter a valid IP/Address and port that contains only numbers.",
     "invalidServerRemove": "Invalid server to remove",
     "invalidServerEdit": "Invalid server to edit",
+	"invalidServerCreate": "Error creating server",
+	"invalidServerName": "Invalid server name",
+	"serverNameInUse": "Invalid server name: name already in use",
     "transferError": "Error connecting to server. Invalid address."
   },
   "disconnect": {

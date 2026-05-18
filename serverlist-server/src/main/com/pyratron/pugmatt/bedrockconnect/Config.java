@@ -58,6 +58,7 @@ public class Config {
     private Whitelist whitelist;
     private Language language;
     private CustomServerHandler customServers;
+    private String managerPath;
 
     private Config() {}
 
@@ -248,6 +249,8 @@ public class Config {
                 case "online_mode":
                     onlineMode = setting.getValue().equalsIgnoreCase("true");
                     break;
+                case "manager_path":
+                    managerPath = setting.getValue();
             }
         }
 
@@ -462,5 +465,9 @@ public class Config {
 
     public CustomEntry[] getCustomServers() {
         return customServers.getServers();
+    }
+    
+    public String getManagerPath() {
+        return managerPath;
     }
 }

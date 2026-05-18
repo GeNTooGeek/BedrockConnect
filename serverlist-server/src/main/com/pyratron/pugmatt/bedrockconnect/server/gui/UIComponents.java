@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import main.com.pyratron.pugmatt.bedrockconnect.BedrockConnect;
+import main.com.pyratron.pugmatt.bedrockconnect.logging.LogColors;
 import main.com.pyratron.pugmatt.bedrockconnect.server.BCPlayer;
 
 import org.json.simple.JSONArray;
