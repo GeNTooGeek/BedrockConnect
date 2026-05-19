@@ -99,8 +99,8 @@ public class BCPlayer {
     }
 
     public boolean addServer(String address, String port, String name) {
-        List<String> serverList = getServerList();
-        if (serverList.size() >= getServerLimit())
+        boolean result=false;
+        if (this.serverList.size() >= getServerLimit())
             createError(BedrockConnect.getConfig().getLanguage().getWording("error", "serverLimit").replace("%MAX_SERVERS%", Integer.toString(getServerLimit())));
         else {
             String server;
@@ -109,11 +109,18 @@ public class BCPlayer {
                 server = address + ":" + port + ":" + name;
             else
                 server = address + ":" + port;
-            serverList.add(server);
-            setServerList(serverList);
-            return true;
+            result = this.serverList.add(server);
         }
-        return false;
+        return result;
+    }
+    
+    public boolean removeServer(String address, String port, String name) {
+        boolean result=false;
+        if (!name.isEmpty())
+            result = this.serverList.remove(String.format("%s:%s:%s", address,port,name));
+        else
+            result = this.serverList.remove(String.format("%s:%s", address,port));
+        return result;
     }
 
     public String getDisplayName() {
@@ -226,6 +233,9 @@ public class BCPlayer {
                 break;
             case UIForms.CREATE_WORLD:
                 form = UIForms.createCreateWorld();
+                break;
+            case UIForms.DELETE_WORLD:
+                form = UIForms.createDeleteWorld(this);
                 break;
             case UIForms.EDIT_CHOOSE_SERVER:
                 form = UIForms.createEditChooseServer(getServerList());

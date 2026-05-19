@@ -142,7 +142,8 @@ public class PacketHandler implements BedrockPacketHandler {
 
                             boolean managerFinished;
                             String managerResult;
-                            List<String> worldPorts;
+                            String[] worldPorts;
+                            String type = currentFormDataJson.getAsJsonArray("content").get(1).getAsJsonObject().getAsJsonArray("options").get(Integer.parseInt(data.get(1))).getAsString();
 
                             // Call minecraft-server-manager to create world
                             
@@ -152,7 +153,7 @@ public class PacketHandler implements BedrockPacketHandler {
                                 "create",
                                 "--player_xuid", player.getUuid(),
                                 "--world_name", data.get(0),
-                                "--type", currentFormDataJson.getAsJsonArray("content").get(1).getAsJsonObject().getAsJsonArray("options").get(0).getAsString(),
+                                "--type", type,
                                 "--server_version", "latest",
                                 "--seed", String.format("\"%s\"", data.get(2))
                             );
@@ -168,13 +169,10 @@ public class PacketHandler implements BedrockPacketHandler {
                                     case 0:    // OK
                                         //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Manager Exit:0");
                                         managerResult = reader.readLine();
-                            
-                                        worldPorts = Arrays.asList(managerResult.split("\\|"));
-                                        //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Host:" + worldPorts);
                                         
-                                        String address = InetAddress.getLocalHost().getCanonicalHostName();
+                                        String address = BedrockConnect.getConfig().getHostName();
                                         //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Host:" + address);
-                                        String port = worldPorts.get(0);
+                                        String port = managerResult.split("\\|")[0];
                                         String name = data.get(0);
                                         
                                         if(UIComponents.validateServerInfo(address, port, name, player)) {
@@ -219,6 +217,90 @@ public class PacketHandler implements BedrockPacketHandler {
                 } catch(Exception e) {
                     BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] " + BedrockConnect.getConfig().getLanguage().getWording("creatWorld", "UnkonwnServerCreateError"));
                     player.createError(BedrockConnect.getConfig().getLanguage().getWording("creatWorld", "UnkownServerCreateError"));
+                }
+                break;
+            case UIForms.DELETE_WORLD:
+                try {
+                    if(packet.getFormData() == null || packet.getFormData().contains("null")) {
+                        if(player.getCurrentForm() != packet.getFormId())
+                            return PacketSignal.HANDLED;
+                        player.openForm(UIForms.MANAGE_SERVER);
+                    } else {
+                        JsonObject currentFormDataJson = JsonParser.parseString(player.getCurrentFormData()).getAsJsonObject();
+                        ArrayList<String> data = UIComponents.getFormData(packet.getFormData());
+
+                        if(data.size() == 1) {
+                            ProcessBuilder pb;
+                            Process process;
+
+                            boolean managerFinished;
+                            String managerResult;
+                            String worldName = currentFormDataJson.getAsJsonArray("content").get(0).getAsJsonObject().getAsJsonArray("options").get(Integer.parseInt(data.get(0))).getAsString();
+
+                            // Call minecraft-server-manager to create world
+                            
+                            pb = new ProcessBuilder(
+                                "sudo",
+                                BedrockConnect.getConfig().getManagerPath(),
+                                "delete",
+                                "--player_xuid", player.getUuid(),
+                                "--world_name", worldName
+                            );
+                            //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Starting manager");
+                            pb.redirectErrorStream(true);
+                            process = pb.start();
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                            managerFinished = process.waitFor(5, TimeUnit.SECONDS);
+                            //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] After manager");
+                            if(managerFinished) {
+                                //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Manager finished");
+                                switch (process.exitValue()) {
+                                    case 0:    // OK
+                                        //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Manager Exit:0");
+                                        managerResult = reader.readLine();
+                                        
+                                        String address = BedrockConnect.getConfig().getHostName();
+                                        BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Hostname: " + address);
+                                        String port = managerResult.split("\\|")[0];
+                                        
+                                        if(UIComponents.validateServerInfo(address, port, worldName, player)) {
+                                            BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Server info validated");
+                                            player.removeServer(address, port, worldName);
+                                            //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Sending form");
+                                            player.openForm(UIForms.MANAGE_SERVER);
+                                            //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Finished case:0");
+                                        }
+                                        break;
+                                    // fall-through known error returns
+                                    case 10:   // Missing player_xuid
+                                    case 11:   // Invalid characters in xuid ([a-f0-9]-)
+                                    case 12:   // player_xuid is the wrong length (36 characters)
+                                    case 13:   // Invalid player_xuid format (^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$)
+                                    case 20:   // Missing world_name
+                                    case 21:   // Invalid characters in world_name ([a-zA-Z0-9]- )
+                                    case 22:   // world_name too long (Max 30 characters)
+                                    case 24:   // World with world_name doesn't exists
+                                        //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] "+ BedrockConnect.getConfig().getLanguage().getWording("deleteWorld", "error"+process.exitValue()));
+                                        player.createError(BedrockConnect.getConfig().getLanguage().getWording("deleteWorld", "error"+process.exitValue()));
+                                        break;
+                                    default:
+                                        BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Unknown exit code:" + process.exitValue());
+                                        player.createError(BedrockConnect.getConfig().getLanguage().getWording("deleteWorld", "UnknownExitCode"));
+                                        break;
+                                }
+
+                            } else {
+                                BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] " + BedrockConnect.getConfig().getLanguage().getWording("deleteWorld", "WorldCreationTimeout"));
+                                player.createError(BedrockConnect.getConfig().getLanguage().getWording("deleteWorld", "WorldDeletionTimeout"));
+                            }
+                        } else {
+                            BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] " + BedrockConnect.getConfig().getLanguage().getWording("deleteWorld", "InvalidWorldInformation"));
+                            player.createError(BedrockConnect.getConfig().getLanguage().getWording("deleteWorld", "InvalidWorldInformation"));
+                        }
+                    }
+                } catch(Exception e) {
+                    BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] " + BedrockConnect.getConfig().getLanguage().getWording("deleteWorld", "UnkonwnServerCreateError"));
+                    player.createError(BedrockConnect.getConfig().getLanguage().getWording("deleteWorld", "UnkownServerDeleteError"));
                 }
                 break;
             case UIForms.MOTD:
@@ -332,8 +414,10 @@ public class PacketHandler implements BedrockPacketHandler {
                 }
                 else {
                     int chosen = Integer.parseInt(packet.getFormData().replaceAll("\\s+",""));
+                    //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Chosen: " + chosen);
 
                     ManageFormButton button = UIForms.getManageFormButton(chosen);
+                    //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Button: " + button);
 
                     switch(button) {
                         case ADD:
@@ -347,6 +431,9 @@ public class PacketHandler implements BedrockPacketHandler {
                             break;
                         case CREATE:
                             player.openForm(UIForms.CREATE_WORLD);
+                            break;
+                        case DELETE:
+                            player.openForm(UIForms.DELETE_WORLD);
                             break;
                     }
                 }

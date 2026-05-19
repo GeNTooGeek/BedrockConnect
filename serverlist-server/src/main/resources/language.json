@@ -19,7 +19,8 @@
     "addBtn": "Add a Server",
     "removeBtn": "Remove a Server",
     "editBtn": "Edit a Server",
-    "createBtn": "Create a World"
+    "createBtn": "Create a World",
+    "deleteBtn": "Delete a World"
   },
   "connect": {
     "heading": "Connect to a Server",
@@ -42,7 +43,7 @@
     "heading": "Create a World",
     "worldNameTitle": "World Name",
     "worldTypeTitle": "World Type",
-    "seedTitle": "World Seed"
+    "seedTitle": "World Seed",
     "error10": "Missing player_xuid",
     "error11": "Invalid characters in xuid ([a-f0-9]-)",
     "error12": "player_xuid is the wrong length (36 characters)",
@@ -57,8 +58,24 @@
     "error52": "Seed too long (Max 32 characters).",
     "UnknownExitCode": "An unknown exit code was returned.",
     "WorldCreationTimeout": "World creation took too long.",
-    "InvalidWorldInformation": "Invalid World Information was given."
+    "InvalidWorldInformation": "Invalid World Information was given.",
     "UnkownServerCreateError": "An unknown error occured while creating world."
+  },
+  "deleteWorld": {
+    "heading": "Delete a World",
+    "worldListTitle": "Choose a World to delete...",
+    "error10": "Missing player_xuid",
+    "error11": "Invalid characters in xuid ([a-f0-9]-)",
+    "error12": "player_xuid is the wrong length (36 characters)",
+    "error13": "Invalid player_xuid format (^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$)",
+    "error20": "Missing world_name",
+    "error21": "Invalid characters in world_name ([a-zA-Z0-9]- )",
+    "error22": "world_name too long (Max 30 characters)",
+    "error24": "World with world_name doesn't exist",
+    "UnknownExitCode": "An unknown exit code was returned.",
+    "WorldDeletionTimeout": "World deletion took too long.",
+    "InvalidWorldInformation": "Invalid World Information was given.",
+    "UnkownServerDeleteError": "An unknown error occured while creating world."
   },
   "remove": {
     "heading": "Remove Server",

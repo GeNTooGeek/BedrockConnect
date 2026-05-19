@@ -7,6 +7,7 @@ import main.com.pyratron.pugmatt.bedrockconnect.config.Custom.CustomEntry;
 import main.com.pyratron.pugmatt.bedrockconnect.config.Custom.CustomServer;
 import main.com.pyratron.pugmatt.bedrockconnect.config.Custom.CustomServerGroup;
 import main.com.pyratron.pugmatt.bedrockconnect.logging.LogColors;
+import main.com.pyratron.pugmatt.bedrockconnect.server.BCPlayer;
 
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
 import org.cloudburstmc.protocol.bedrock.packet.ModalFormRequestPacket;
@@ -19,7 +20,7 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 
 public class UIForms {
-    public static final int ERROR = 2, MAIN = 0, DIRECT_CONNECT = 1, REMOVE_SERVER = 3, MANAGE_SERVER = 4, EDIT_SERVER = 5, EDIT_CHOOSE_SERVER = 6, ADD_SERVER = 7, SERVER_GROUP = 8, MOTD = 9, CREATE_WORLD = 901;
+    public static final int ERROR = 2, MAIN = 0, DIRECT_CONNECT = 1, REMOVE_SERVER = 3, MANAGE_SERVER = 4, EDIT_SERVER = 5, EDIT_CHOOSE_SERVER = 6, ADD_SERVER = 7, SERVER_GROUP = 8, MOTD = 9, CREATE_WORLD = 901, DELETE_WORLD = 902;
 
     public static JsonArray mainMenuButtons = new JsonArray();
     public static JsonArray manageListButtons = new JsonArray();
@@ -38,6 +39,7 @@ public class UIForms {
         manageListButtons.add(UIComponents.createButton(BedrockConnect.getConfig().getLanguage().getWording("manage", "addBtn")));
         manageListButtons.add(UIComponents.createButton(BedrockConnect.getConfig().getLanguage().getWording("manage", "editBtn")));
         manageListButtons.add(UIComponents.createButton(BedrockConnect.getConfig().getLanguage().getWording("manage", "createBtn")));
+        manageListButtons.add(UIComponents.createButton(BedrockConnect.getConfig().getLanguage().getWording("manage", "deleteBtn")));
         manageListButtons.add(UIComponents.createButton(removeBtnText));
 
         featuredServerButtons.add(UIComponents.createButton("The Hive", "https://i.imgur.com/RfxfPGz.png", "url"));
@@ -163,6 +165,8 @@ public class UIForms {
             case 2:
                 return ManageFormButton.CREATE;
             case 3:
+                return ManageFormButton.DELETE;
+            case 4:
                 return ManageFormButton.REMOVE;
         }
         return null;
@@ -212,7 +216,7 @@ public class UIForms {
         List<String> worldTypes;
         //List<String> worldVersions = new ArrayList<>();
         
-        // TODO: Call minecraft-server-manager to get types list
+        // Call minecraft-server-manager to get types list
         try {
             ProcessBuilder pb = new ProcessBuilder("sudo", "/usr/local/bin/minecraft-server-manager.sh", "listtypes");
             pb.redirectErrorStream(true);
@@ -236,6 +240,57 @@ public class UIForms {
         inputs.add(UIComponents.createDropdown(worldTypes, BedrockConnect.getConfig().getLanguage().getWording("createWorld", "worldTypeTitle"), "0"));
         //inputs.add(UIComponents.createDropdown(worldVersions, BedrockConnect.getConfig().getLanguage().getWording("createWorld", "worldVersionTitle"), "0"));
         inputs.add(UIComponents.createInput(BedrockConnect.getConfig().getLanguage().getWording("createWorld", "seedTitle"), "", ""));
+
+        out.add("content", inputs);
+        mf.setFormData(out.toString());
+        //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] CreateWorld Form Data: " + mf.getFormData() );
+
+        return mf;
+    }
+
+    public static ModalFormRequestPacket createDeleteWorld(BCPlayer player) {
+        ModalFormRequestPacket mf = new ModalFormRequestPacket();
+        mf.setFormId(UIForms.DELETE_WORLD);
+        JsonObject out = UIComponents.createForm("custom_form", BedrockConnect.getConfig().getLanguage().getWording("deleteWorld", "heading"));
+
+        JsonArray inputs = new JsonArray();
+        List<String> worldList;
+        String line;
+
+        // Call minecraft-server-manager to get owned worlds
+        try {
+            ProcessBuilder pb;
+            Process process;
+            
+            pb = new ProcessBuilder(
+                "sudo",
+                "/usr/local/bin/minecraft-server-manager.sh",
+                "listworlds",
+                "--player_xuid", player.getUuid()
+            );
+            pb.redirectErrorStream(true);
+            
+            process = pb.start();
+            
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            
+            line = reader.readLine();
+            int myExitCode = process.waitFor();
+        } catch (Exception e){
+            e.printStackTrace();
+            return mf;
+        }
+        
+        worldList = Arrays.asList(line.split("\\|"));
+        
+        //worldList.replaceAll(s -> UIComponents.getServerDisplayName(BedrockConnect.getConfig().getHostName() + ":" + s));
+        
+        //for (String server : player.getServerList()){
+        //    if (server.startsWith(BedrockConnect.getConfig().getHostName() + ":"))
+        //        worldList.add(UIComponents.getServerDisplayName(server));
+        //}
+        
+        inputs.add(UIComponents.createDropdown(worldList, BedrockConnect.getConfig().getLanguage().getWording("deleteWorld", "worldListTitle"), "0"));
 
         out.add("content", inputs);
         mf.setFormData(out.toString());

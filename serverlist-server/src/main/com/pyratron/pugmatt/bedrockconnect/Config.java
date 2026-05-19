@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -59,6 +60,7 @@ public class Config {
     private Language language;
     private CustomServerHandler customServers;
     private String managerPath;
+    private String hostName = "";
 
     private Config() {}
 
@@ -78,6 +80,12 @@ public class Config {
         String dbUser = "root";
         String dbPass = "";
         DatabaseTypes dbType = DatabaseTypes.nosql;
+        
+        try {
+            hostName = InetAddress.getLocalHost().getCanonicalHostName();
+        } catch (UnknownHostException ex) {
+            BedrockConnect.logger.error("Error retrieving local hostname", ex);
+        }
 
         String customServersFile = null;
         String languageFile = null;
@@ -251,6 +259,10 @@ public class Config {
                     break;
                 case "manager_path":
                     managerPath = setting.getValue();
+                    break;
+                case "host_name":
+                    hostName = setting.getValue();
+                    break;
             }
         }
 
@@ -469,5 +481,9 @@ public class Config {
     
     public String getManagerPath() {
         return managerPath;
+    }
+    
+    public String getHostName() {
+        return hostName;
     }
 }
