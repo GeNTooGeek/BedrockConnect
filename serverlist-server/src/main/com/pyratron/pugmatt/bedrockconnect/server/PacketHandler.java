@@ -474,7 +474,7 @@ public class PacketHandler implements BedrockPacketHandler {
             executor.shutdown();
         if(player != null)
             BedrockConnect.getServer().removePlayer(player);
-         BedrockConnect.logger.info("[ " + LogColors.cyan(BedrockConnect.getServer().getPlayers().size() + " online") + " ] Player disconnected: " + name + " (xuid: " + uuid + ")");
+         BedrockConnect.logger.info("[ " + LogColors.cyan(BedrockConnect.getServer().getPlayers().size() + " online") + " ] Player disconnected: " + name + " (uuid: " + uuid + ")");
     }
     
     @Override
@@ -519,20 +519,21 @@ public class PacketHandler implements BedrockPacketHandler {
 
             extraData = result.identityClaims().extraData;
 
-            BedrockConnect.logger.debug("Player made it through login: " + extraData.displayName + " (xuid: " + extraData.identity + ")");
+            BedrockConnect.logger.debug("Player made it through login: " + extraData.displayName + " (uuid: " + extraData.identity + ")");
 
             if (!result.signed()) {
-               BedrockConnect.logger.debug("Chain not signed: " + extraData.displayName + " (xuid: " + extraData.identity + ")");
+               BedrockConnect.logger.debug("Chain not signed: " + extraData.displayName + " (uuid: " + extraData.identity + ")");
             }
 
             name = extraData.displayName;
             uuid = extraData.identity.toString();
+            xuid = extraData.xuid;
             
             // Whitelist check
             Whitelist whitelist = BedrockConnect.getConfig().getWhitelist();
             if (whitelist.hasWhitelist() && !whitelist.isPlayerWhitelisted(name)) {
             	session.disconnect(whitelist.getWhitelistMessage());
-            	BedrockConnect.logger.info("Kicked " + name + " (xuid: " + uuid + "): \"" + whitelist.getWhitelistMessage() + "\"");
+            	BedrockConnect.logger.info("Kicked " + name + " (uuid: " + uuid + "): \"" + whitelist.getWhitelistMessage() + "\"");
             }
 
             PlayStatusPacket status = new PlayStatusPacket();

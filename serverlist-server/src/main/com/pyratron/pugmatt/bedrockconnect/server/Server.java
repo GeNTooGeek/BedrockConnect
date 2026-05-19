@@ -44,7 +44,7 @@ public class Server {
 
     public void addPlayer(BCPlayer player) {
         this.players.add(player);
-        BedrockConnect.logger.info("[ " + LogColors.cyan(this.players.size() + " online") + " ] Player connected: " + player.getDisplayName() + " (xuid: " + player.getUuid() + ")");
+        BedrockConnect.logger.info("[ " + LogColors.cyan(this.players.size() + " online") + " ] Player connected: " + player.getDisplayName() + " (uuid: " + player.getUuid() + ")");
     }
 
     public void removePlayer(BCPlayer player) {
