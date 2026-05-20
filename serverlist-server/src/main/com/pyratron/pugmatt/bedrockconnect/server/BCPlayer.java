@@ -15,6 +15,9 @@ import org.cloudburstmc.nbt.NbtUtils;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
 import org.cloudburstmc.protocol.bedrock.data.*;
 import org.cloudburstmc.protocol.bedrock.packet.*;
+import org.cloudburstmc.protocol.bedrock.util.ChainValidationResult;
+import org.cloudburstmc.protocol.bedrock.util.ChainValidationResult.IdentityData;
+import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
 import org.cloudburstmc.protocol.common.util.OptionalBoolean;
 
 import java.io.ByteArrayOutputStream;
@@ -28,12 +31,8 @@ public class BCPlayer {
 
     private BedrockServerSession session;
     private List<String> serverList = new ArrayList<>();
-
     private int serverLimit;
-
-    private String displayName;
-    private String uuid;
-
+    private IdentityData extraData;
     private LocalTime lastAction;
     private LocalDateTime viewedMotd;
 
@@ -64,9 +63,9 @@ public class BCPlayer {
     }
 
 
-    public BCPlayer(String displayName, String uuid, BedrockServerSession session, List<String> serverList, int serverLimit, boolean newPlayer, LocalDateTime viewedMotd) {
-        this.displayName = displayName;
-        this.uuid = uuid;
+    public BCPlayer(IdentityData extraData, BedrockServerSession session, List<String> serverList, int serverLimit, boolean newPlayer, LocalDateTime viewedMotd) {
+        
+        this.extraData = extraData;
         this.session = session;
         this.serverList = serverList;
         this.serverLimit = serverLimit;
@@ -74,8 +73,6 @@ public class BCPlayer {
         this.viewedMotd = viewedMotd;
         this.newPlayer = newPlayer;
 
-        if(session != null && session.isConnected())
-        joinGame();
     }
 
     public BedrockServerSession getSession() {
@@ -93,7 +90,7 @@ public class BCPlayer {
     }
 
     public void setServerList(List<String> serverList) {
-        BedrockConnect.getDataUtil().setValueString("servers", UIComponents.serversToFormData(serverList), serverList, uuid);
+        BedrockConnect.getDataUtil().setValueString("servers", UIComponents.serversToFormData(serverList), serverList, extraData.identity.toString());
         this.serverList = serverList;
     }
 
@@ -116,11 +113,11 @@ public class BCPlayer {
     }
 
     public String getDisplayName() {
-        return displayName;
+        return extraData.displayName;
     }
 
     public String getUuid() {
-        return uuid;
+        return extraData.identity.toString();
     }
 
     public int getServerLimit() {
@@ -128,7 +125,7 @@ public class BCPlayer {
     }
 
     public void setServerLimit(int serverLimit) {
-        BedrockConnect.getDataUtil().setValueInt("serverLimit", serverLimit, uuid);
+        BedrockConnect.getDataUtil().setValueInt("serverLimit", serverLimit, extraData.identity.toString());
         this.serverLimit = serverLimit;
     }
 
@@ -146,13 +143,13 @@ public class BCPlayer {
         TextPacket text = new TextPacket();
         text.setType(TextPacket.Type.TIP);
         text.setMessage(BedrockConnect.getConfig().getLanguage().getWording("retriggerMsg", "tip"));
-        text.setXuid(uuid);
+        text.setXuid(extraData.identity.toString());
         session.sendPacket(text);
 
         TextPacket text2 = new TextPacket();
         text2.setType(TextPacket.Type.RAW);
         text2.setMessage(BedrockConnect.getConfig().getLanguage().getWording("retriggerMsg", "chat"));
-        text2.setXuid(uuid);
+        text2.setXuid(extraData.identity.toString());
         session.sendPacket(text2);
     }
 

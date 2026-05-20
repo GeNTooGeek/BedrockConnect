@@ -30,11 +30,6 @@ import java.util.concurrent.TimeUnit;
 
 public class PacketHandler implements BedrockPacketHandler {
     private BedrockServerSession session;
-
-    private String name;
-    private String uuid;
-    private IdentityData extraData;
-
     private BCPlayer player;
 
     // Used for server icon fix
@@ -68,8 +63,8 @@ public class PacketHandler implements BedrockPacketHandler {
     public PacketSignal handlePacket(BedrockPacket packet) {
         if (BedrockConnect.getConfig().isDebugEnabled() && !(packet instanceof PlayerAuthInputPacket)) {
             String id = session.getSocketAddress().toString();
-            if (name != null) {
-                id = name;
+            if (player != null && player.getDisplayName() != null) {
+                id = player.getDisplayName();
             }
             if (packet instanceof LoginPacket) {
                 BedrockConnect.logger.debug(LogColors.gray("[ " + id + " ] " + "LoginPacket"));
@@ -422,7 +417,7 @@ public class PacketHandler implements BedrockPacketHandler {
             }
             tp.setPort(port);
             session.sendPacketImmediately(tp);
-            BedrockConnect.logger.debug("Transferred player " + name + " to " + tp.getAddress() + ":" + tp.getPort());
+            BedrockConnect.logger.debug("Transferred player " + player.getDisplayName() + " to " + tp.getAddress() + ":" + tp.getPort());
         } catch (Exception e) {
             player.createError(BedrockConnect.getConfig().getLanguage().getWording("error", "transferError"));
         }
@@ -474,14 +469,15 @@ public class PacketHandler implements BedrockPacketHandler {
             executor.shutdown();
         if(player != null)
             BedrockConnect.getServer().removePlayer(player);
-         BedrockConnect.logger.info("[ " + LogColors.cyan(BedrockConnect.getServer().getPlayers().size() + " online") + " ] Player disconnected: " + name + " (uuid: " + uuid + ")");
+         BedrockConnect.logger.info("[ " + LogColors.cyan(BedrockConnect.getServer().getPlayers().size() + " online") + " ] Player disconnected: " + player.getDisplayName() + " (uuid: " + player.getUuid() + ")");
     }
     
     @Override
     public PacketSignal handle(ResourcePackClientResponsePacket packet) {
         switch (packet.getStatus()) {
             case COMPLETED:
-                BedrockConnect.getDataUtil().initializePlayerData(uuid, name, session, this);
+                if(session != null && session.isConnected())
+                    this.player.joinGame();
                 break;
             case HAVE_ALL_PACKS:
                 ResourcePackStackPacket rs = new ResourcePackStackPacket();
@@ -517,24 +513,24 @@ public class PacketHandler implements BedrockPacketHandler {
                 throw new RuntimeException("AuthData was not found!");
             }
 
-            extraData = result.identityClaims().extraData;
+            IdentityData extraData = result.identityClaims().extraData;
 
-            BedrockConnect.logger.debug("Player made it through login: " + extraData.displayName + " (uuid: " + extraData.identity + ")");
+            BedrockConnect.logger.debug("Player made it through login: " + extraData.displayName + " (uuid: " + extraData.identity.toString() + ")");
 
             if (!result.signed()) {
-               BedrockConnect.logger.debug("Chain not signed: " + extraData.displayName + " (uuid: " + extraData.identity + ")");
+               BedrockConnect.logger.debug("Chain not signed: " + extraData.displayName + " (uuid: " + extraData.identity.toString() + ")");
             }
-
-            name = extraData.displayName;
-            uuid = extraData.identity.toString();
-            xuid = extraData.xuid;
             
             // Whitelist check
             Whitelist whitelist = BedrockConnect.getConfig().getWhitelist();
-            if (whitelist.hasWhitelist() && !whitelist.isPlayerWhitelisted(name)) {
+            if (whitelist.hasWhitelist() && !whitelist.isPlayerWhitelisted(extraData.displayName)) {
             	session.disconnect(whitelist.getWhitelistMessage());
-            	BedrockConnect.logger.info("Kicked " + name + " (uuid: " + uuid + "): \"" + whitelist.getWhitelistMessage() + "\"");
+            	BedrockConnect.logger.info("Kicked " + extraData.displayName + " (uuid: " + extraData.identity.toString() + "): \"" + whitelist.getWhitelistMessage() + "\"");
+                // Should we exit here?  Does continuing after the disconnect cause problems?
             }
+            
+            
+            player = BedrockConnect.getDataUtil().initializePlayerData(extraData, session);
 
             PlayStatusPacket status = new PlayStatusPacket();
             status.setStatus(PlayStatusPacket.Status.LOGIN_SUCCESS);
