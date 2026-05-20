@@ -266,7 +266,7 @@ public class UIForms {
                 "sudo",
                 "/usr/local/bin/minecraft-server-manager.sh",
                 "listworlds",
-                "--player_xuid", player.getUuid()
+                "--player_xuid", player.getXuid()
             );
             pb.redirectErrorStream(true);
             

@@ -127,6 +127,10 @@ public class BCPlayer {
     public String getUuid() {
         return extraData.identity.toString();
     }
+    
+    public String getXuid() {
+        return extraData.xuid;
+    }
 
     public int getServerLimit() {
         return serverLimit;

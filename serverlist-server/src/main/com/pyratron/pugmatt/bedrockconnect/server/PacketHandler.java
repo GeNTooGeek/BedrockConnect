@@ -146,7 +146,7 @@ public class PacketHandler implements BedrockPacketHandler {
                                 "sudo",
                                 BedrockConnect.getConfig().getManagerPath(),
                                 "create",
-                                "--player_xuid", player.getUuid(),
+                                "--player_xuid", player.getXuid(),
                                 "--world_name", data.get(0),
                                 "--type", type,
                                 "--server_version", "latest",
@@ -238,7 +238,7 @@ public class PacketHandler implements BedrockPacketHandler {
                                 "sudo",
                                 BedrockConnect.getConfig().getManagerPath(),
                                 "delete",
-                                "--player_xuid", player.getUuid(),
+                                "--player_xuid", player.getXuid(),
                                 "--world_name", worldName
                             );
                             //BedrockConnect.logger.info("[ " + LogColors.purple("Tracing") + " ] Starting manager");
