@@ -337,7 +337,6 @@ public class PacketHandler implements BedrockPacketHandler {
                             if (address.split(":").length > 1) {
                                 String ip = address.split(":")[0];
                                 String port = address.split(":")[1];
-
                                 transfer(ip, Integer.parseInt(port));
                             } else {
                                 player.createError((BedrockConnect.getConfig().getLanguage().getWording("error", "invalidUserServer")));
@@ -607,6 +606,24 @@ public class PacketHandler implements BedrockPacketHandler {
 
     public void transfer(String ip, int port) {
         try {
+            
+            if (ip.toLowerCase().equals(BedrockConnect.getConfig().getHostName().toLowerCase())){
+                // Start world
+                try {
+                    ProcessBuilder pb = new ProcessBuilder(
+                        "sudo",
+                        "/usr/local/bin/minecraft-server-manager.sh",
+                        "startworld",
+                        "--world_port", Integer.toString(port)
+                        );
+                    Process process = pb.start();
+                    process.waitFor();
+                    
+                } catch (Exception e){
+                    player.createError((BedrockConnect.getConfig().getLanguage().getWording("error", "transferError")));
+                }
+            }
+            
             TransferPacket tp = new TransferPacket();
             if(BedrockConnect.getConfig().canFetchIps() && UIComponents.isDomain(ip)) {
                 tp.setAddress(getIP(ip));

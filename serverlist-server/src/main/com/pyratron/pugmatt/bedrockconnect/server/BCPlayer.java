@@ -97,7 +97,7 @@ public class BCPlayer {
 
     public boolean addServer(String address, String port, String name) {
         boolean result=false;
-        if (this.serverList.size() >= getServerLimit())
+        if (serverList.size() >= getServerLimit())
             createError(BedrockConnect.getConfig().getLanguage().getWording("error", "serverLimit").replace("%MAX_SERVERS%", Integer.toString(getServerLimit())));
         else {
             String server;
@@ -106,7 +106,8 @@ public class BCPlayer {
                 server = address + ":" + port + ":" + name;
             else
                 server = address + ":" + port;
-            result = this.serverList.add(server);
+            result = serverList.add(server);
+            BedrockConnect.getDataUtil().setValueString("servers", UIComponents.serversToFormData(serverList), serverList, extraData.identity.toString());
         }
         return result;
     }
@@ -114,9 +115,10 @@ public class BCPlayer {
     public boolean removeServer(String address, String port, String name) {
         boolean result=false;
         if (!name.isEmpty())
-            result = this.serverList.remove(String.format("%s:%s:%s", address,port,name));
+            result = serverList.remove(String.format("%s:%s:%s", address,port,name));
         else
-            result = this.serverList.remove(String.format("%s:%s", address,port));
+            result = serverList.remove(String.format("%s:%s", address,port));
+        BedrockConnect.getDataUtil().setValueString("servers", UIComponents.serversToFormData(serverList), serverList, extraData.identity.toString());
         return result;
     }
 
