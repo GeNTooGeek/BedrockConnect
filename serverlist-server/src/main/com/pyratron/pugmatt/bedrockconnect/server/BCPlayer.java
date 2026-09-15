@@ -10,6 +10,7 @@ import org.cloudburstmc.math.vector.Vector2f;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NBTOutputStream;
+import org.cloudburstmc.nbt.NbtList;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtUtils;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
@@ -241,6 +242,21 @@ public class BCPlayer {
     }
 
     public void joinGame() {
+        JigsawStructureDataPacket jigsawStructureDataPacket = new JigsawStructureDataPacket();
+        Map<String, Object> map = new HashMap<String, Object>() {{
+            put("processors", NbtList.EMPTY);
+            put("template_pools", NbtList.EMPTY);
+            put("jigsaws", NbtList.EMPTY);
+            put("structure_sets", NbtList.EMPTY);
+        }};
+        jigsawStructureDataPacket.setJigsawStructureDataTag(NbtMap.fromMap(map));
+        session.sendPacket(jigsawStructureDataPacket);
+
+        VoxelShapesPacket voxelShapesPacket = new VoxelShapesPacket();
+        voxelShapesPacket.setNameMap(new HashMap<>());
+        voxelShapesPacket.setShapes(new ArrayList<>());
+        session.sendPacket(voxelShapesPacket);
+
         StartGamePacket startGamePacket = new StartGamePacket();
         startGamePacket.setUniqueEntityId(1);
         startGamePacket.setRuntimeEntityId(1);
